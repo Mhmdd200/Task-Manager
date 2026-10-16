@@ -35,7 +35,7 @@ def create_access_token(user_id: int) -> str:
         minutes=settings.access_token_expire_minutes
     )
     payload = {"sub": str(user_id), "exp": expire}
-    return jwt.encode(payload, settings.secret_key, algorith=settings.algorithm)
+    return jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
 
 def authenticate_user(db: Session, email: str, password: str) -> str:
     user = user_repository.get_by_email(db, email.lower())
