@@ -1,4 +1,5 @@
 from fastapi import APIRouter, status
+from app.dependencies.auth import CurrentUser
 from app.dependencies.database import DbSession
 from app.schemas.user import UserCreate, UserResponse
 from app.schemas.auth import LoginRequest, Token
@@ -21,3 +22,7 @@ def login(data: LoginRequest, db: DbSession):
     user = auth_service.authenticate_user(db, data.email, data.password)
     access_token = auth_service.create_access_token(user.id)
     return Token(access_token=access_token)
+
+@router.get("/me", response_model=UserResponse)
+def me(current_user: CurrentUser):
+    return current_user

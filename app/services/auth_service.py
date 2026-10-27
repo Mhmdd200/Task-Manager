@@ -37,7 +37,7 @@ def create_access_token(user_id: int) -> str:
     payload = {"sub": str(user_id), "exp": expire}
     return jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
 
-def authenticate_user(db: Session, email: str, password: str) -> str:
+def authenticate_user(db: Session, email: str, password: str) -> User:
     user = user_repository.get_by_email(db, email.lower())
     if user is None or not verify_password(password, user.hashed_password):
         raise HTTPException(
@@ -46,3 +46,6 @@ def authenticate_user(db: Session, email: str, password: str) -> str:
             headers={"WWW-Authenticate": "Bearer"},
         )
     return user
+
+def get_all_users(db: Session) -> list[User]:
+    return user_repository.get_all_users(db)

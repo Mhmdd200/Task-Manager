@@ -23,3 +23,7 @@ def create(db: Session, *, name: str, email: str, hashed_password: str) -> User:
     db.commit()
     db.refresh(user)
     return user
+
+def get_all_users(db: Session) -> list[User]:
+    query = select(User)
+    return db.scalars(query).all()
