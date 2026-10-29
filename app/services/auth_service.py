@@ -46,6 +46,3 @@ def authenticate_user(db: Session, email: str, password: str) -> User:
             headers={"WWW-Authenticate": "Bearer"},
         )
     return user
-
-def get_all_users(db: Session) -> list[User]:
-    return user_repository.get_all_users(db)
