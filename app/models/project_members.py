@@ -1,10 +1,12 @@
 from datetime import datetime, timezone
 from sqlalchemy import DateTime, String, UniqueConstraint
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import ForeignKey
 from app.database import Base
 from app.enums import Role
 from sqlalchemy import Enum as SAEnum
+from typing import TYPE_CHECKING
+if TYPE_CHECKING: from app.models.user import User
 class ProjectMember(Base):
     __tablename__ = "project_members"
     __table_args__ = (UniqueConstraint("project_id", "user_id"),)
@@ -12,6 +14,7 @@ class ProjectMember(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     project_id: Mapped[int] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"))
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    user: Mapped["User"] = relationship()
     role: Mapped[Role] = mapped_column(
         SAEnum(
             Role,

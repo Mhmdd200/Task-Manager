@@ -37,3 +37,8 @@ def create_member(data: ProjectMemberCreate, project: ProjectAsOwner, db: DbSess
     # ProjectAsOwner already checked the project from the URL, so we pass that
     # same project down instead of trusting any project_id from the body
     return project_service.add_member(db, project, data.user_id)
+
+# get all members for a project: any member can see all members on the project
+@router.get("/{project_id}/members", response_model=list[ProjectMemberResponse])
+def get_members_for_project(project: ProjectAsMember, db: DbSession):
+    return project_service.get_members_for_project(db, project.id)

@@ -84,3 +84,6 @@ def add_member(db: Session, project: Project, user_id: int) -> ProjectMember:
         raise _already_a_member()
     # role is always "member"; making someone an owner will be a separate action
     return project_repository.add_member(db, project.id, user_id, Role.MEMBER)
+
+def get_members_for_project(db: Session, project_id: int) -> list[ProjectMember]:
+    return project_repository.get_members_for_project(db, project_id)
