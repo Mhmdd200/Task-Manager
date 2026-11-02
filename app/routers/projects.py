@@ -31,3 +31,9 @@ def get_project_by_id(project: ProjectAsMember):
 def delete_project(project: ProjectAsOwner, db: DbSession):
     project_service.delete_project(db, project)
     
+@router.post("/{project_id}/members", status_code=status.HTTP_201_CREATED)
+def create_member(project: ProjectAsOwner, db: DbSession):
+    # here the permissions are for owner. only owner can add a member
+    # also an owner can add a member only not an owner. As i will leave setting user as owner
+    # for another api. so check if the user is a member
+    
