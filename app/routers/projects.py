@@ -42,3 +42,13 @@ def create_member(data: ProjectMemberCreate, project: ProjectAsOwner, db: DbSess
 @router.get("/{project_id}/members", response_model=list[ProjectMemberResponse])
 def get_members_for_project(project: ProjectAsMember, db: DbSession):
     return project_service.get_members_for_project(db, project.id)
+
+# remove a member from project (only owners can remove any member or a member can remove himself)
+@router.delete("/{project_id}/members/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_member_from_project(
+    user_id: int,                # {user_id} from the URL: the member to remove
+    project: ProjectAsMember,    # reads {project_id}: 404 if missing or the caller isn't a member
+    current_user: CurrentUser,   # the caller, from the token
+    db: DbSession,
+):
+    project_service.delete_member_for_project(db, project.id, user_id, current_user)

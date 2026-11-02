@@ -58,6 +58,10 @@ def add_member(db: Session, project_id: int, user_id: int, role: Role = Role.MEM
     db.refresh(member)
     return member
 
+def delete_member_from_project(db: Session, member: ProjectMember):
+    db.delete(member)
+    db.commit()
+    
 def get_members_for_project(db: Session, project_id: int) -> list[ProjectMember]:
     query = (
         select(ProjectMember)
