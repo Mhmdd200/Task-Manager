@@ -1,5 +1,5 @@
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.enums import Role
 from app.models.project import Project
@@ -57,3 +57,11 @@ def add_member(db: Session, project_id: int, user_id: int, role: Role = Role.MEM
     db.commit()
     db.refresh(member)
     return member
+
+def get_members_for_project(db: Session, project_id: int) -> list[ProjectMember]:
+    query = (
+        select(ProjectMember)
+        .options(joinedload(ProjectMember.user))
+        .where(ProjectMember.project_id == project_id)
+    )
+    return db.scalars(query).all()

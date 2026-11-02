@@ -1,6 +1,7 @@
 from pydantic import BaseModel, ConfigDict
 
 from app.enums import Role
+from app.schemas.user import UserResponse
 
 
 class ProjectMemberCreate(BaseModel):
@@ -13,6 +14,6 @@ class ProjectMemberResponse(BaseModel):
     
     id: int
     project_id: int
-    user_id: int
+    user: UserResponse
     role: Role
     
