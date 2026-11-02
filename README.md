@@ -71,11 +71,50 @@ The API is now available at <http://127.0.0.1:8000>.
 
 ## Endpoints
 
-| Method | Path             | Description                |
-|--------|------------------|----------------------------|
-| GET    | `/health`        | Health check               |
-| POST   | `/auth/register` | Register a new user        |
-| POST   | `/auth/login`    | Log in and get a JWT token |
+Endpoints marked **Auth** require a JWT in the `Authorization` header:
+
+```
+Authorization: Bearer <access_token>
+```
+
+Get a token from `POST /auth/login`. In Swagger UI, click **Authorize** and paste the token.
+
+### General
+
+| Method | Path      | Auth | Description  |
+|--------|-----------|------|--------------|
+| GET    | `/health` | —    | Health check |
+
+### Auth
+
+| Method | Path             | Auth | Description                     |
+|--------|------------------|------|---------------------------------|
+| POST   | `/auth/register` | —    | Register a new user             |
+| POST   | `/auth/login`    | —    | Log in and get a JWT token      |
+| GET    | `/auth/me`       | Yes  | Get the currently logged-in user |
+
+### Users
+
+| Method | Path     | Auth | Description    |
+|--------|----------|------|----------------|
+| GET    | `/users` | Yes  | List all users |
+| GET    | `/users/{user_id}` | Yes  | Get a user by ID |
+
+### Projects
+
+| Method | Path                     | Auth | Access | Description                                     |
+|--------|--------------------------|------|--------|-------------------------------------------------|
+| POST   | `/projects`              | Yes  | Any user | Create a project (you become its owner)       |
+| GET    | `/projects`              | Yes  | Any user | List the projects you belong to               |
+| GET    | `/projects/{project_id}` | Yes  | Member | Get a project by ID                             |
+| PATCH  | `/projects/{project_id}` | Yes  | Owner  | Update a project (only the fields you send)     |
+| DELETE | `/projects/{project_id}` | Yes  | Owner  | Delete a project                                |
+
+**Project permissions**
+
+- **Member**: any user who belongs to the project. A user who is not a member gets `404 Project not found`, so outsiders can't tell whether the project exists.
+- **Owner**: the user who created the project. A member who is not the owner gets `403 Forbidden`.
+- A missing or invalid token returns `401 Unauthorized`.
 
 ## Database migrations
 
