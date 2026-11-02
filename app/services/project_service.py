@@ -1,16 +1,26 @@
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.enums import Role
 from app.models.project import Project
+from app.models.project_members import ProjectMember
 from app.models.user import User
 from app.repositories import project_repository
 from app.schemas.project import ProjectCreate, ProjectUpdate
+from app.services import user_service
 
-    
+
 def _project_not_found() -> HTTPException:
     return HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
         detail="Project not found",
+    )
+
+
+def _already_a_member() -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_409_CONFLICT,
+        detail="User is already a member of this project",
     )
 
 
@@ -65,3 +75,12 @@ def update_project(db: Session, project: Project, data: ProjectUpdate) -> Projec
 
 def delete_project(db: Session, project: Project):
     return project_repository.delete(db, project)
+
+def add_member(db: Session, project: Project, user_id: int) -> ProjectMember:
+    # 404 first: there is no point checking membership for a user that doesn't exist
+    user_service.get_user_or_404(db, user_id)
+    # get_member returns None instead of raising, which is what we need here
+    if project_repository.get_member(db, project.id, user_id) is not None:
+        raise _already_a_member()
+    # role is always "member"; making someone an owner will be a separate action
+    return project_repository.add_member(db, project.id, user_id, Role.MEMBER)

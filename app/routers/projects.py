@@ -4,6 +4,7 @@ from app.dependencies.auth import CurrentUser
 from app.dependencies.database import DbSession
 from app.dependencies.permissions import ProjectAsMember, ProjectAsOwner
 from app.schemas.project import ProjectCreate, ProjectResponse, ProjectUpdate
+from app.schemas.project_member import ProjectMemberCreate, ProjectMemberResponse
 from app.services import project_service
 
 router = APIRouter(prefix="/projects", tags=["projects"])
@@ -31,9 +32,8 @@ def get_project_by_id(project: ProjectAsMember):
 def delete_project(project: ProjectAsOwner, db: DbSession):
     project_service.delete_project(db, project)
     
-@router.post("/{project_id}/members", status_code=status.HTTP_201_CREATED)
-def create_member(project: ProjectAsOwner, db: DbSession):
-    # here the permissions are for owner. only owner can add a member
-    # also an owner can add a member only not an owner. As i will leave setting user as owner
-    # for another api. so check if the user is a member
-    
+@router.post("/{project_id}/members", response_model=ProjectMemberResponse, status_code=status.HTTP_201_CREATED)
+def create_member(data: ProjectMemberCreate, project: ProjectAsOwner, db: DbSession):
+    # ProjectAsOwner already checked the project from the URL, so we pass that
+    # same project down instead of trusting any project_id from the body
+    return project_service.add_member(db, project, data.user_id)

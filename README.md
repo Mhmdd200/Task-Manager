@@ -109,6 +109,7 @@ Get a token from `POST /auth/login`. In Swagger UI, click **Authorize** and past
 | GET    | `/projects/{project_id}` | Yes  | Member | Get a project by ID                             |
 | PATCH  | `/projects/{project_id}` | Yes  | Owner  | Update a project (only the fields you send)     |
 | DELETE | `/projects/{project_id}` | Yes  | Owner  | Delete a project                                |
+| POST   | `/projects/{project_id}/members` | Yes | Owner | Add a user to the project as a `member`. Body: `{"user_id": 5}`. Returns `404` if the user doesn't exist, `409` if they are already a member |
 
 **Project permissions**
 

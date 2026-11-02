@@ -4,10 +4,10 @@ from app.enums import Role
 
 
 class ProjectMemberCreate(BaseModel):
-    project_id: int
+    # project_id comes from the URL and role is always "member",
+    # so the client only chooses which user to add
     user_id: int
-    role: Role
-    
+
 class ProjectMemberResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     
