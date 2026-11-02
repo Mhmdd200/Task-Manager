@@ -109,13 +109,53 @@ Get a token from `POST /auth/login`. In Swagger UI, click **Authorize** and past
 | GET    | `/projects/{project_id}` | Yes  | Member | Get a project by ID                             |
 | PATCH  | `/projects/{project_id}` | Yes  | Owner  | Update a project (only the fields you send)     |
 | DELETE | `/projects/{project_id}` | Yes  | Owner  | Delete a project                                |
-| POST   | `/projects/{project_id}/members` | Yes | Owner | Add a user to the project as a `member`. Body: `{"user_id": 5}`. Returns `404` if the user doesn't exist, `409` if they are already a member |
 
 **Project permissions**
 
 - **Member**: any user who belongs to the project. A user who is not a member gets `404 Project not found`, so outsiders can't tell whether the project exists.
 - **Owner**: the user who created the project. A member who is not the owner gets `403 Forbidden`.
 - A missing or invalid token returns `401 Unauthorized`.
+
+### Project members
+
+| Method | Path                                       | Auth | Access                  | Description                                  |
+|--------|--------------------------------------------|------|-------------------------|----------------------------------------------|
+| POST   | `/projects/{project_id}/members`           | Yes  | Owner                   | Add a user to the project as a `member`      |
+| GET    | `/projects/{project_id}/members`           | Yes  | Member                  | List the project's members, with user details |
+| DELETE | `/projects/{project_id}/members/{user_id}` | Yes  | Owner, or the member themselves | Remove a member, or leave the project |
+
+**Add a member**
+
+Request body:
+
+```json
+{ "user_id": 5 }
+```
+
+- The new member always gets the role `member`. Any `role` or `project_id` sent in the body is ignored; the project comes from the URL.
+- `404 User not found`: the user doesn't exist.
+- `409 Conflict`: the user is already a member of the project.
+
+**Member response** (returned by `POST` and, as a list, by `GET`):
+
+```json
+{
+  "id": 2,
+  "project_id": 1,
+  "role": "member",
+  "user": { "id": 5, "name": "Sara", "email": "sara@example.com", "created_at": "2026-11-02T14:20:12" }
+}
+```
+
+**Remove a member**
+
+`{user_id}` is the ID of the user to remove, not the membership `id`.
+
+- The owner can remove any member.
+- A member can remove only themselves, which means leaving the project. Removing someone else returns `403 Forbidden`.
+- The owner can't be removed, not even by themselves: `400 Bad Request`.
+- `404 Member not found`: the user is not a member of the project.
+- Returns `204 No Content` on success.
 
 ## Database migrations
 
