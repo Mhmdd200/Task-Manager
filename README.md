@@ -159,6 +159,50 @@ Request body:
 - `404 Member not found`: the user is not a member of the project.
 - Returns `204 No Content` on success.
 
+### Tasks
+
+Tasks belong to a project. Deleting a project deletes its tasks.
+
+| Method | Path                           | Auth | Access | Description                                   |
+|--------|--------------------------------|------|--------|-----------------------------------------------|
+| POST   | `/projects/{project_id}/tasks` | Yes  | Member | Create a task in the project                  |
+| GET    | `/projects/{project_id}/tasks` | Yes  | Member | List the project's tasks, optionally filtered by status |
+
+**Create a task**
+
+Request body (only `title` is required):
+
+```json
+{ "title": "Design login page", "description": "Optional details", "assignee_id": 5 }
+```
+
+- `title`: 1 to 200 characters.
+- New tasks always start with the status `todo`. Any `status` sent in the body is ignored.
+- The task's creator (`created_by_id`) is the logged-in user.
+- `assignee_id` is optional. If sent, that user must be a member of the project, otherwise `400 Assignee must be a member of the project`.
+
+**List tasks**
+
+- `GET /projects/{project_id}/tasks` returns all of the project's tasks, oldest first.
+- `GET /projects/{project_id}/tasks?status=done` returns only tasks with that status. Allowed values: `todo`, `in_progress`, `done`. Any other value returns `422`.
+
+**Task response** (returned by `POST` and, as a list, by `GET`):
+
+```json
+{
+  "id": 1,
+  "project_id": 1,
+  "title": "Design login page",
+  "description": null,
+  "status": "todo",
+  "created_by_id": 2,
+  "created_at": "2026-11-03T13:20:00",
+  "assignee": { "id": 5, "name": "Sara", "email": "sara@example.com", "created_at": "2026-11-02T14:20:12" }
+}
+```
+
+`assignee` is `null` when the task is unassigned.
+
 ## Database migrations
 
 After changing a model in `app/models/`:

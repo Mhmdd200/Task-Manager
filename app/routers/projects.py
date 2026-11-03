@@ -3,9 +3,11 @@ from fastapi import APIRouter, status
 from app.dependencies.auth import CurrentUser
 from app.dependencies.database import DbSession
 from app.dependencies.permissions import ProjectAsMember, ProjectAsOwner
+from app.enums import TaskStatus
 from app.schemas.project import ProjectCreate, ProjectResponse, ProjectUpdate
 from app.schemas.project_member import ProjectMemberCreate, ProjectMemberResponse
-from app.services import project_service
+from app.schemas.task import TaskCreate, TaskResponse
+from app.services import project_service, task_service
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
@@ -52,3 +54,11 @@ def delete_member_from_project(
     db: DbSession,
 ):
     project_service.delete_member_for_project(db, project.id, user_id, current_user)
+
+@router.post("/{project_id}/tasks", response_model=TaskResponse, status_code=status.HTTP_201_CREATED)
+def create_task(task: TaskCreate, project: ProjectAsMember, current_user: CurrentUser, db: DbSession):
+    return task_service.create_task(db, task, current_user, project.id)
+
+@router.get("/{project_id}/tasks", response_model=list[TaskResponse])
+def get_tasks(project: ProjectAsMember, db: DbSession, status: TaskStatus | None = None):
+    return task_service.get_tasks(db, project.id, status)
