@@ -32,6 +32,8 @@ All commands must be run from the project root.
    pip install -r requirements.txt
    ```
 
+   If you use [uv](https://docs.astral.sh/uv/) instead of pip, create the environment with `uv venv` and install with `uv pip install -r requirements.txt`.
+
 4. **Create a `.env` file** in the project root
 
    ```env
@@ -172,6 +174,35 @@ To undo the last migration:
 alembic downgrade -1
 ```
 
+## Running tests
+
+> **Note:** The test setup (`pytest.ini`, `tests/conftest.py`, `tests/test_health.py` and `tests/test_db_setup.py`) was written with AI assistance and has not been reviewed by me yet. Tests for the project and member endpoints are still to do.
+
+With the virtual environment active, run from the project root:
+
+```bash
+pytest -v
+```
+
+Tests run against a fresh in-memory SQLite database for each test, so `task_manager.db` is never touched. `tests/conftest.py` provides these fixtures:
+
+| Fixture | Gives a test |
+|---------|--------------|
+| `db` | A database session on the empty test database |
+| `client` | A `TestClient` whose endpoints use the test database |
+| `make_user(name)` | A new user with the email `{name}@test.com` |
+| `make_project(owner)` | A new project, including the owner's membership |
+| `auth_headers(user)` | An `Authorization` header with a valid token for that user |
+
+Useful options:
+
+| Command | What it does |
+|---------|--------------|
+| `pytest -x` | Stop at the first failure |
+| `pytest -k remove` | Run only tests whose name contains "remove" |
+| `pytest --lf` | Rerun only the tests that failed last time |
+| `pytest -s` | Show `print()` output |
+
 ## Project structure
 
 ```
@@ -186,4 +217,5 @@ app/
 ├── services/          # Business logic
 └── routers/           # API endpoints
 alembic/               # Migration scripts
+tests/                 # pytest tests; shared fixtures in conftest.py
 ```
