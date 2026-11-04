@@ -167,6 +167,7 @@ Tasks belong to a project. Deleting a project deletes its tasks.
 |--------|--------------------------------|------|--------|-----------------------------------------------|
 | POST   | `/projects/{project_id}/tasks` | Yes  | Member | Create a task in the project                  |
 | GET    | `/projects/{project_id}/tasks` | Yes  | Member | List the project's tasks, optionally filtered by status |
+| PATCH  | `/projects/{project_id}/tasks/{task_id}` | Yes | Owner, task creator or assignee | Update a task (only the fields you send) |
 
 **Create a task**
 
@@ -186,7 +187,21 @@ Request body (only `title` is required):
 - `GET /projects/{project_id}/tasks` returns all of the project's tasks, oldest first.
 - `GET /projects/{project_id}/tasks?status=done` returns only tasks with that status. Allowed values: `todo`, `in_progress`, `done`. Any other value returns `422`.
 
-**Task response** (returned by `POST` and, as a list, by `GET`):
+**Update a task**
+
+All fields are optional. Only the fields you send are changed, and an empty body `{}` changes nothing.
+
+```json
+{ "title": "New title", "description": "...", "status": "in_progress", "assignee_id": 5 }
+```
+
+- Who can update: the project owner, the task's creator, or its current assignee. Any other member gets `403 Forbidden`.
+- `title`: if sent, 1 to 200 characters. It can't be `null` (`422`).
+- `status`: `todo`, `in_progress` or `done`.
+- `assignee_id`: leave it out to keep the current assignee, send `null` to unassign the task, or send a user ID to reassign it. That user must be a member of the project, otherwise `400`.
+- `404 Task not found`: the task doesn't exist, or it belongs to a different project than the one in the URL.
+
+**Task response** (returned by `POST` and `PATCH`, and as a list by `GET`):
 
 ```json
 {

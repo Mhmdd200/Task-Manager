@@ -96,7 +96,13 @@ def create_project(db: Session, data: ProjectCreate, current_user: User) -> Proj
     )
     
 def update_project(db: Session, project: Project, data: ProjectUpdate) -> Project:
-    # only the fields the client actually sent
+    # model_dump(exclude_unset=True) keeps only the fields the client SENT, whatever their value:
+    #   {"name": "abc"}  -> {"name": "abc"}   sent with a value: kept
+    #   {"name": null}   -> {"name": None}    sent as null: KEPT (it is "set", just to None)
+    #   {}               -> {}                not sent: excluded
+    # it checks "was the key in the request?", not "does it have a value?".
+    # (exclude_none=True is the one that drops null values, which would make
+    #  "set this to null" impossible, e.g. unassigning a task)
     updates = data.model_dump(exclude_unset=True)
     if not updates:
         return project
