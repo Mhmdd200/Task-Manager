@@ -2,11 +2,11 @@ from fastapi import APIRouter, status
 
 from app.dependencies.auth import CurrentUser
 from app.dependencies.database import DbSession
-from app.dependencies.permissions import ProjectAsMember, ProjectAsOwner
+from app.dependencies.permissions import ProjectAsMember, ProjectAsOwner, TaskForProject
 from app.enums import TaskStatus
 from app.schemas.project import ProjectCreate, ProjectResponse, ProjectUpdate
 from app.schemas.project_member import ProjectMemberCreate, ProjectMemberResponse
-from app.schemas.task import TaskCreate, TaskResponse
+from app.schemas.task import TaskCreate, TaskResponse, TaskUpdate
 from app.services import project_service, task_service
 
 router = APIRouter(prefix="/projects", tags=["projects"])
@@ -62,3 +62,10 @@ def create_task(task: TaskCreate, project: ProjectAsMember, current_user: Curren
 @router.get("/{project_id}/tasks", response_model=list[TaskResponse])
 def get_tasks(project: ProjectAsMember, db: DbSession, status: TaskStatus | None = None):
     return task_service.get_tasks(db, project.id, status)
+
+# update a task: the project owner, the task's creator or its assignee (only the fields sent)
+@router.patch("/{project_id}/tasks/{task_id}", response_model=TaskResponse)
+def update_task(data: TaskUpdate, task: TaskForProject, current_user: CurrentUser, db: DbSession):
+    # TaskForProject reads {project_id} and {task_id}: 404 unless the caller is a member
+    # and the task belongs to this project
+    return task_service.update_task(db, task, data, current_user)

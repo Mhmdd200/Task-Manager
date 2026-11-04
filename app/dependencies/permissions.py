@@ -5,7 +5,8 @@ from fastapi import Depends
 from app.dependencies.auth import CurrentUser
 from app.dependencies.database import DbSession
 from app.models.project import Project
-from app.services import project_service
+from app.models.task import Task
+from app.services import project_service, task_service
 
 
 def get_project_as_member(
@@ -28,3 +29,12 @@ def get_project_as_owner(
 
 ProjectAsMember = Annotated[Project, Depends(get_project_as_member)]
 ProjectAsOwner = Annotated[Project, Depends(get_project_as_owner)]
+
+def task_for_project(
+    task_id: int,
+    project: ProjectAsMember,
+    db: DbSession
+) -> Task:
+    return task_service.get_task_or_404(db, task_id, project.id)
+
+TaskForProject = Annotated[Task, Depends(task_for_project)]
