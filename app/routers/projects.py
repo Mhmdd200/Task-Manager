@@ -69,3 +69,12 @@ def update_task(data: TaskUpdate, task: TaskForProject, current_user: CurrentUse
     # TaskForProject reads {project_id} and {task_id}: 404 unless the caller is a member
     # and the task belongs to this project
     return task_service.update_task(db, task, data, current_user)
+
+@router.get("/{project_id}/tasks/{task_id}", response_model=TaskResponse)
+def get_task(task: TaskForProject):
+    return task
+
+@router.delete("/{project_id}/tasks/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_task(task: TaskForProject, current_user: CurrentUser, db: DbSession):
+    # TaskForProject covers membership; the service checks who is allowed to delete
+    task_service.delete_task(db, task, current_user)

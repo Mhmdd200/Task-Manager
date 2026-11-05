@@ -5,7 +5,7 @@ from app.enums import Role
 from app.models.project import Project
 from app.models.project_members import ProjectMember
 from app.models.user import User
-from app.repositories import project_repository
+from app.repositories import project_repository, task_repository
 from app.schemas.project import ProjectCreate, ProjectUpdate
 from app.services import user_service
 
@@ -141,16 +141,13 @@ def delete_member_for_project(db: Session, project_id: int, user_id: int, curren
     if is_owner(project_member_to_be_deleted):
         raise _owner_cant_be_deleted()
     
-    if is_owner(project_member_for_current_user):
-        project_repository.delete_member_from_project(db, project_member_to_be_deleted)
-        
-    elif is_member(project_member_for_current_user):
-        if (project_member_to_be_deleted == project_member_for_current_user):
-            project_repository.delete_member_from_project(db, project_member_to_be_deleted)
-        else:
+    if is_member(project_member_for_current_user):
+        if user_id != current_user.id:
             raise _member_cant_be_deleted()
-    
-    else:
+    elif not is_owner(project_member_for_current_user):
         raise _role_not_found()
-        
-        
+
+    # one transaction: the only commit is inside delete_member_from_project,
+    # so the unassign and the removal are saved together or not at all
+    task_repository.unassign_member_tasks(db, project_id, user_id)
+    project_repository.delete_member_from_project(db, project_member_to_be_deleted)

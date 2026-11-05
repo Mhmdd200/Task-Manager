@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session, joinedload
 
 from app.enums import TaskStatus
@@ -18,12 +18,25 @@ def create_task(db: Session, project_id: int, title: str, description: str | Non
     db.refresh(task)
     return task
 
+def delete_task(db: Session, task: Task):
+    db.delete(task)
+    db.commit()
+    
 def update_task(db: Session, task: Task, updates: dict) -> Task:
     for field, value in updates.items():
         setattr(task, field, value)
     db.commit()
     db.refresh(task)
     return task
+
+def unassign_member_tasks(db: Session, project_id: int, user_id: int) -> None:
+    # no commit here: the caller commits this together with removing the member
+    query = (
+        update(Task)
+        .where(Task.project_id == project_id, Task.assignee_id == user_id)
+        .values(assignee_id=None)
+    )
+    db.execute(query)
 
 def get_tasks_for_project(db: Session, project_id: int, status: TaskStatus | None) -> list[Task]:
     query = select(Task).options(joinedload(Task.assignee)).where(Task.project_id == project_id).order_by(Task.created_at)
