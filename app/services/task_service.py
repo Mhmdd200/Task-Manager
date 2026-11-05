@@ -27,6 +27,12 @@ def _cant_update_task() -> HTTPException:
         detail="You can't update this task",
     )
 
+def _cant_delete_task() -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="You can't delete this task",
+    )
+
 
 def create_task(db: Session, data: TaskCreate, current_user: User, project_id: int) -> Task:
     # the dependency already made sure current_user is a member of the project,
@@ -72,3 +78,11 @@ def get_task_or_404(db: Session, task_id: int, project_id: int) -> Task:
     if task is None:
         raise _task_not_found()
     return task
+
+def delete_task(db: Session, task: Task, current_user: User) -> None:
+    # the dependency already made sure the task is in the project and current_user is a member.
+    # unlike update, the assignee can't delete: only the project owner or the task's creator
+    project = project_repository.get_by_id(db, task.project_id)
+    if current_user.id not in (project.owner_id, task.created_by_id):
+        raise _cant_delete_task()
+    task_repository.delete_task(db, task)

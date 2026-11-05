@@ -157,6 +157,7 @@ Request body:
 - A member can remove only themselves, which means leaving the project. Removing someone else returns `403 Forbidden`.
 - The owner can't be removed, not even by themselves: `400 Bad Request`.
 - `404 Member not found`: the user is not a member of the project.
+- Their tasks in this project become unassigned. Tasks in other projects don't change.
 - Returns `204 No Content` on success.
 
 ### Tasks
@@ -167,7 +168,9 @@ Tasks belong to a project. Deleting a project deletes its tasks.
 |--------|--------------------------------|------|--------|-----------------------------------------------|
 | POST   | `/projects/{project_id}/tasks` | Yes  | Member | Create a task in the project                  |
 | GET    | `/projects/{project_id}/tasks` | Yes  | Member | List the project's tasks, optionally filtered by status |
+| GET    | `/projects/{project_id}/tasks/{task_id}` | Yes | Member | Get a task by ID |
 | PATCH  | `/projects/{project_id}/tasks/{task_id}` | Yes | Owner, task creator or assignee | Update a task (only the fields you send) |
+| DELETE | `/projects/{project_id}/tasks/{task_id}` | Yes | Owner or task creator | Delete a task |
 
 **Create a task**
 
@@ -199,9 +202,15 @@ All fields are optional. Only the fields you send are changed, and an empty body
 - `title`: if sent, 1 to 200 characters. It can't be `null` (`422`).
 - `status`: `todo`, `in_progress` or `done`.
 - `assignee_id`: leave it out to keep the current assignee, send `null` to unassign the task, or send a user ID to reassign it. That user must be a member of the project, otherwise `400`.
-- `404 Task not found`: the task doesn't exist, or it belongs to a different project than the one in the URL.
 
-**Task response** (returned by `POST` and `PATCH`, and as a list by `GET`):
+**Delete a task**
+
+- Only the project owner or the task's creator can delete a task. Any other member gets `403 Forbidden`, including the assignee.
+- Returns `204 No Content` on success.
+
+For `GET`, `PATCH` and `DELETE` on a single task, `404 Task not found` means the task doesn't exist or belongs to a different project than the one in the URL.
+
+**Task response** (returned by `POST`, `PATCH` and `GET`, and as a list when listing tasks):
 
 ```json
 {
