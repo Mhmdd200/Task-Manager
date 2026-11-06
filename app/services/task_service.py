@@ -87,6 +87,15 @@ def get_task_or_404(db: Session, task_id: int, project_id: int) -> Task:
         raise _task_not_found()
     return task
 
+def get_task_for_member_or_404(db: Session, task_id: int, current_user: User) -> Task:
+    task = task_repository.get_task_by_id(db, task_id)
+    if task is None:
+        raise _task_not_found()
+    member = project_repository.get_member(db, task.project_id, current_user.id)
+    if member is None:
+        raise _task_not_found()
+    return task
+
 def delete_task(db: Session, task: Task, current_user: User) -> None:
     # the dependency already made sure the task is in the project and current_user is a member.
     # unlike update, the assignee can't delete: only the project owner or the task's creator
