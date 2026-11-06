@@ -241,9 +241,22 @@ INFO:app.middleware:GET /health status=200 duration=0.32ms request_id=fcc66c7120
 ```
 
 - All normal responses get both headers, including `401`, `403`, `404` and `422`.
-- If an endpoint crashes, the log line shows `status=500` and the traceback is printed. The `500` response doesn't have these headers, because it is built outside the middleware.
+- If an endpoint crashes, the log line shows `status=500` and the traceback is printed. See [Crash responses](#crash-responses) for what the client receives.
 - Only the method and path are logged. Headers, request bodies and query strings are never logged, because they can contain tokens or passwords.
 - When you run `uvicorn`, you also see its own access line for each request, such as `"GET /health HTTP/1.1" 200 OK`.
+
+## Crash responses
+
+If the server crashes on an unexpected error, `handle_crash` in `app/exception_handlers.py` returns `500` with this body:
+
+```json
+{ "detail": "Internal server error", "request_id": "8f7799e3826d483caa15a2ac4e350982" }
+```
+
+- The same ID is in the `X-Request-ID` header and in the server log, so a user can send you the ID and you can search the log for their exact crash.
+- This response doesn't have `X-Process-Time`, because it is built outside the middleware.
+- The error message is never sent to the client. It only appears in the server log.
+- Normal errors such as `401`, `403`, `404` and `422` don't go through this handler.
 
 ## Database migrations
 
@@ -293,8 +306,9 @@ Useful options:
 
 ```
 app/
-├── main.py            # FastAPI app, logging setup, middleware and router registration
+├── main.py            # FastAPI app, logging setup, middleware, crash handler and router registration
 ├── middleware.py      # Request logging and timing
+├── exception_handlers.py  # JSON response for server crashes
 ├── config.py          # Settings loaded from .env
 ├── database.py        # Engine, SessionLocal, Base
 ├── dependencies/      # FastAPI dependencies (e.g. get_db)
