@@ -49,6 +49,10 @@ def get_task_by_id_and_project_id(db: Session, task_id: int, project_id: int) ->
     query = select(Task).where(Task.id==task_id, Task.project_id==project_id)
     return db.scalar(query)
 
+def get_task_by_id(db: Session, task_id: int) -> Task | None:
+    query = select(Task).where(Task.id==task_id)
+    return db.scalar(query)
+
 def count_tasks_for_project(db: Session, project_id: int, status: TaskStatus | None) -> int:
     query = select(func.count()).select_from(Task).where(Task.project_id == project_id)
     if status is not None:

@@ -38,3 +38,12 @@ def task_for_project(
     return task_service.get_task_or_404(db, task_id, project.id)
 
 TaskForProject = Annotated[Task, Depends(task_for_project)]
+
+def task_for_member(
+    task_id: int,
+    current_user: CurrentUser,
+    db: DbSession
+) -> Task:
+    return task_service.get_task_for_member_or_404(db, task_id, current_user)
+
+TaskAsMember = Annotated[Task, Depends(task_for_member)]
