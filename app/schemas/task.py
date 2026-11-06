@@ -26,6 +26,12 @@ class TaskResponse(BaseModel):
     # nested like members: reads task.assignee, which is None for unassigned tasks
     assignee: UserResponse | None
 
+class TaskListResponse(BaseModel):
+    items: list[TaskResponse]
+    total: int
+    page: int
+    page_size: int
+
 class TaskUpdate(BaseModel):
     # every field is optional: only the fields the client sends are changed
     title: str | None = Field(default=None, min_length=1, max_length=200)

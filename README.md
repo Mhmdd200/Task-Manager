@@ -167,7 +167,7 @@ Tasks belong to a project. Deleting a project deletes its tasks.
 | Method | Path                           | Auth | Access | Description                                   |
 |--------|--------------------------------|------|--------|-----------------------------------------------|
 | POST   | `/projects/{project_id}/tasks` | Yes  | Member | Create a task in the project                  |
-| GET    | `/projects/{project_id}/tasks` | Yes  | Member | List the project's tasks, optionally filtered by status |
+| GET    | `/projects/{project_id}/tasks` | Yes  | Member | List the project's tasks, one page at a time, optionally filtered by status |
 | GET    | `/projects/{project_id}/tasks/{task_id}` | Yes | Member | Get a task by ID |
 | PATCH  | `/projects/{project_id}/tasks/{task_id}` | Yes | Owner, task creator or assignee | Update a task (only the fields you send) |
 | DELETE | `/projects/{project_id}/tasks/{task_id}` | Yes | Owner or task creator | Delete a task |
@@ -187,8 +187,23 @@ Request body (only `title` is required):
 
 **List tasks**
 
-- `GET /projects/{project_id}/tasks` returns all of the project's tasks, oldest first.
-- `GET /projects/{project_id}/tasks?status=done` returns only tasks with that status. Allowed values: `todo`, `in_progress`, `done`. Any other value returns `422`.
+Tasks are returned one page at a time, oldest first.
+
+| Query parameter | Default | Allowed values | Description |
+|-----------------|---------|----------------|-------------|
+| `page`          | `1`     | `1` or higher  | The page to return |
+| `page_size`     | `20`    | `1` to `100`   | Tasks per page |
+| `status`        | none    | `todo`, `in_progress`, `done` | Return only tasks with this status |
+
+A value outside these ranges returns `422`. For example, `GET /projects/1/tasks?status=done&page=2&page_size=10` returns the second page of 10 done tasks.
+
+```json
+{ "items": [ ... ], "total": 25, "page": 1, "page_size": 20 }
+```
+
+- `items`: the tasks on this page. Each one is a task response, shown below.
+- `total`: the number of tasks that match across all pages. With `status`, only tasks with that status are counted.
+- A page past the end returns `200` with an empty `items` list.
 
 **Update a task**
 
@@ -210,7 +225,7 @@ All fields are optional. Only the fields you send are changed, and an empty body
 
 For `GET`, `PATCH` and `DELETE` on a single task, `404 Task not found` means the task doesn't exist or belongs to a different project than the one in the URL.
 
-**Task response** (returned by `POST`, `PATCH` and `GET`, and as a list when listing tasks):
+**Task response** (returned by `POST`, `PATCH` and `GET` on a single task, and inside `items` when listing tasks):
 
 ```json
 {

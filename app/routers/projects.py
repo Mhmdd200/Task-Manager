@@ -6,8 +6,9 @@ from app.dependencies.permissions import ProjectAsMember, ProjectAsOwner, TaskFo
 from app.enums import TaskStatus
 from app.schemas.project import ProjectCreate, ProjectResponse, ProjectUpdate
 from app.schemas.project_member import ProjectMemberCreate, ProjectMemberResponse
-from app.schemas.task import TaskCreate, TaskResponse, TaskUpdate
+from app.schemas.task import TaskCreate, TaskListResponse, TaskResponse, TaskUpdate
 from app.services import project_service, task_service
+from app.dependencies.pagination import PaginationParams
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
@@ -59,9 +60,9 @@ def delete_member_from_project(
 def create_task(task: TaskCreate, project: ProjectAsMember, current_user: CurrentUser, db: DbSession):
     return task_service.create_task(db, task, current_user, project.id)
 
-@router.get("/{project_id}/tasks", response_model=list[TaskResponse])
-def get_tasks(project: ProjectAsMember, db: DbSession, status: TaskStatus | None = None):
-    return task_service.get_tasks(db, project.id, status)
+@router.get("/{project_id}/tasks", response_model=TaskListResponse)
+def get_tasks(project: ProjectAsMember, pagination: PaginationParams, db: DbSession, status: TaskStatus | None = None):
+    return task_service.get_tasks(db, project.id, status, pagination)
 
 # update a task: the project owner, the task's creator or its assignee (only the fields sent)
 @router.patch("/{project_id}/tasks/{task_id}", response_model=TaskResponse)
