@@ -6,6 +6,7 @@ from app.models.task import Task
 from app.models.user import User
 from app.repositories import project_repository, task_repository
 from app.schemas.task import TaskCreate, TaskUpdate
+from app.dependencies.pagination import Pagination
 
 
 def _assignee_not_member() -> HTTPException:
@@ -70,8 +71,15 @@ def update_task(db: Session, task: Task, data: TaskUpdate, current_user: User) -
 
     return task_repository.update_task(db, task, updates)
 
-def get_tasks(db: Session, project_id: int, status: TaskStatus | None) -> list[Task]:
-    return task_repository.get_tasks_for_project(db, project_id, status)
+def get_tasks(db: Session, project_id: int, status: TaskStatus | None, pagination: Pagination) -> dict:
+    items = task_repository.get_tasks_for_project(db, project_id, status, pagination.offset, pagination.page_size)
+    total = task_repository.count_tasks_for_project(db, project_id, status)
+    return {
+        "items": items,
+        "total": total,
+        "page": pagination.page,
+        "page_size": pagination.page_size,
+    }
 
 def get_task_or_404(db: Session, task_id: int, project_id: int) -> Task:
     task = task_repository.get_task_by_id_and_project_id(db, task_id, project_id)
