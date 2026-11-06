@@ -227,6 +227,24 @@ For `GET`, `PATCH` and `DELETE` on a single task, `404 Task not found` means the
 
 `assignee` is `null` when the task is unassigned.
 
+## Request logging
+
+`app/middleware.py` wraps every request. It adds two response headers and logs one line per request.
+
+| Header | Value |
+|--------|-------|
+| `X-Request-ID` | A new unique ID for this request |
+| `X-Process-Time` | How long the request took, in milliseconds |
+
+```
+INFO:app.middleware:GET /health status=200 duration=0.32ms request_id=fcc66c7120a841a49d04106370f24fbc
+```
+
+- All normal responses get both headers, including `401`, `403`, `404` and `422`.
+- If an endpoint crashes, the log line shows `status=500` and the traceback is printed. The `500` response doesn't have these headers, because it is built outside the middleware.
+- Only the method and path are logged. Headers, request bodies and query strings are never logged, because they can contain tokens or passwords.
+- When you run `uvicorn`, you also see its own access line for each request, such as `"GET /health HTTP/1.1" 200 OK`.
+
 ## Database migrations
 
 After changing a model in `app/models/`:
@@ -275,7 +293,8 @@ Useful options:
 
 ```
 app/
-├── main.py            # FastAPI app and router registration
+├── main.py            # FastAPI app, logging setup, middleware and router registration
+├── middleware.py      # Request logging and timing
 ├── config.py          # Settings loaded from .env
 ├── database.py        # Engine, SessionLocal, Base
 ├── dependencies/      # FastAPI dependencies (e.g. get_db)
