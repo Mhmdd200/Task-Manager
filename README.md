@@ -242,6 +242,39 @@ For `GET`, `PATCH` and `DELETE` on a single task, `404 Task not found` means the
 
 `assignee` is `null` when the task is unassigned.
 
+### Comments
+
+Comments belong to a task. Their URLs use only the task ID, because a task already knows its project.
+
+| Method | Path                         | Auth | Access | Description              |
+|--------|------------------------------|------|--------|--------------------------|
+| POST   | `/tasks/{task_id}/comments`  | Yes  | Member of the task's project | Add a comment to a task |
+
+**Add a comment**
+
+Request body:
+
+```json
+{ "body": "Looks good to me" }
+```
+
+- `body`: 1 to 1000 characters. Only spaces returns `422`.
+- The author is the logged-in user. Any `author_id` sent in the body is ignored.
+- `404 Task not found`: the task doesn't exist, or you're not a member of its project. Both cases return the same response, so outsiders can't tell which tasks exist.
+- Deleting a task, or the project it belongs to, deletes its comments.
+
+**Comment response:**
+
+```json
+{
+  "id": 1,
+  "task_id": 3,
+  "body": "Looks good to me",
+  "created_at": "2026-11-06T13:20:00",
+  "author": { "id": 5, "name": "Sara", "email": "sara@example.com", "created_at": "2026-11-02T14:20:12" }
+}
+```
+
 ## Request logging
 
 `app/middleware.py` wraps every request. It adds two response headers and logs one line per request.

@@ -88,6 +88,7 @@ def get_task_or_404(db: Session, task_id: int, project_id: int) -> Task:
     return task
 
 def get_task_for_member_or_404(db: Session, task_id: int, current_user: User) -> Task:
+    # this ensures the task is their and the user is member of its project
     task = task_repository.get_task_by_id(db, task_id)
     if task is None:
         raise _task_not_found()
